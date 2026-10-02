@@ -1,0 +1,15 @@
+name: aerosol-convection
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - numpy
+  - pandas
+  - xarray
+  - netcdf4
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - cartopy
+  - pyyaml

@@ -1,0 +1,22 @@
+# Data sources; scripts build the stats/data/terrain/celltracking subpaths from celltracking_dir
+celltracking_dir: "/path/to/taranis_corcsapr2cfrppiqcM1_celltracking.c1"
+gridded_dir: "/path/to/taranis_corcsapr2cfrppiqcM1_gridded.c1"
+
+# Plot output directory
+plots_dir: "plots"
+
+# Choose from: eth_10dbz, Tb_min, zh_max, rr_max, volrain, rainarea
+CI_variable: eth_10dbz
+# CI_variable: rainarea
+# CI_variable: Tb_min
+# CI_variable: zh_max
+# CI_variable: rr_max
+# CI_variable: volrain
+
+
+# Filter mask from the_chosen_few_{CI_variable}.nc (pipe_filter.py). "default" = 80 km range,
+# 4-timestep lifetime. Non-default masks suffix figure filenames with _{mask}.
+# Variants: 60km, 70km, 90km, 100km, 110km   (radar range cut)
+#           2ts, 3ts, 5ts, 6ts               (minimum cell lifetime)
+#           date1, date2, date3, date4       (drop the Nth most prolific start date)
+mask: default
