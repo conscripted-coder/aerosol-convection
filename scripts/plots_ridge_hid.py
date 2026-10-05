@@ -8,14 +8,13 @@ Left labels name the category; right labels give its median.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import seaborn as sns
 import sys
 import yaml
 import xarray as xr
 from plots_ridge_radar import draw_ridge, fmt_median
 
-mpl.rcParams['font.family'] = 'Arial'
+import lib_style
 
 LABEL_OF = {
         'rime_liq':                 'Rimed Ice $_{liq}$',

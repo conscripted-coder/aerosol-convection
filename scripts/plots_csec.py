@@ -10,7 +10,7 @@ import os
 import pandas as pd
 import sys
 import yaml
-mpl.rcParams['font.family']     = 'Arial'
+import lib_style
 mpl.rcParams['hatch.linewidth'] = 0.4
 
 config           = yaml.full_load(open(sys.argv[1]))

@@ -8,14 +8,13 @@ supp_radardist_{CI_variable}.png - cells vs. radar range under the 110km mask
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import seaborn as sns
 
 import sys
 import yaml
 import xarray as xr
 
-mpl.rcParams['font.family'] = 'Arial'
+import lib_style
 
 THRESH      = 2  # coupling threshold (K); keep in step with pipe_filter.py
 THETAE_BINS = np.arange(0, 15, 2)

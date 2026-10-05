@@ -8,13 +8,12 @@ Each ridge is the KDE of one percentile column of a variable family (e.g. ``zh_l
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import seaborn as sns
 import sys
 import yaml
 import xarray as xr
 
-mpl.rcParams['font.family'] = 'Arial'
+import lib_style
 
 # Percentile levels drawn, high -> low
 PCTLS       = [ 'p98', 'p90', 'p75', 'p50']

@@ -14,12 +14,11 @@ import numpy as np
 import xarray as xr
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from matplotlib.patches import Patch
 import os
 import yaml
 from lib_regression import fit_bootstrap_regression, DEFAULT_PERCENTILES
-mpl.rcParams['font.family'] = 'Arial'
+import lib_style
 
 config_file = sys.argv[1]
 stream      = open(config_file, 'r')

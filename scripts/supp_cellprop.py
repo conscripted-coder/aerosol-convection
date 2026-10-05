@@ -7,12 +7,11 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import sys
 import yaml
 import xarray as xr
 
-mpl.rcParams['font.family'] = 'Arial'
+import lib_style
 
 ALL_CI_VARS = ["eth_10dbz", "Tb_min", "zh_max", "rr_max", "volrain", "rainarea"]
 

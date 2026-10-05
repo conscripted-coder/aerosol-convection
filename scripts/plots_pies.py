@@ -15,7 +15,7 @@ from matplotlib.patches import Patch
 from matplotlib.transforms import Bbox
 import yaml
 from lib_regression import fit_bootstrap_regression
-mpl.rcParams['font.family'] = 'Arial'
+import lib_style
 
 config_file = sys.argv[1]
 stream      = open(config_file, 'r')

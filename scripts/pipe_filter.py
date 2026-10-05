@@ -3,11 +3,10 @@ import pandas as pd
 import xarray as xr
 import hashlib
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import seaborn as sns
 import sys
 import yaml
-mpl.rcParams['font.family'] = 'Arial'
+import lib_style
 
 config_file = sys.argv[1]
 stream      = open(config_file, 'r')

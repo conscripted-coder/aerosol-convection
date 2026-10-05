@@ -18,8 +18,8 @@ Every script is run with the config as its first argument:
 python scripts/<script>.py scripts/config.yaml
 ```
 
-The figures use Arial. On machines without it (e.g. NERSC), matplotlib warns and falls back to
-another font. The figures still render.
+The figures use Arial. The environment installs it (`mscorefonts`), so the figures look the same
+on machines without a system Arial (e.g. NERSC).
 
 ## Input data
 
@@ -33,10 +33,10 @@ to the two folders this creates. For the figures alone, `data.zip` is enough.
 |-----------------|-----------------------------------------------------------------|--------|
 | `stats/`        | Track statistics and per-track environment/aerosol parameters   | [Zenodo](https://doi.org/10.5281/zenodo.23094051), made with [PyFLEXTRKR](https://github.com/FlexTRKR/PyFLEXTRKR) + [cacti-radar](https://github.com/ICLASS-SFA/cacti-radar/tree/time_series_enochjo) |
 | `celltracking/` | Per-timestep cell masks, `20181015.0000_20190303.0000/celltracks_*.nc` | [Zenodo](https://doi.org/10.5281/zenodo.23094051) (case-study timestep only), made with [PyFLEXTRKR](https://github.com/FlexTRKR/PyFLEXTRKR) |
-| `data/`         | Pipeline outputs (see below)                                    | [Zenodo](https://doi.org/10.5281/zenodo.23094051) |
+| `data/`         | Preprocessing outputs (see below)                               | [Zenodo](https://doi.org/10.5281/zenodo.23094051) |
 | `terrain/`      | `terrain_d01.nc`, `lat_d01.nc`, `lon_d01.nc`                    | [Zenodo](https://doi.org/10.5281/zenodo.23094051) |
 
-The pipeline reads these six files from `stats/`:
+The preprocessing scripts read these six files from `stats/`:
 
 - `trackstats_20181015.0000_20190303.0000.nc`
 - `stats_goes16_20181015.0000_20190303.0000.nc`
@@ -68,9 +68,9 @@ the case-study file. The full set on NERSC is in `/global/cfs/cdirs/m1657/enochj
   overwritten. Only the `plots_*` scripts (except `plots_csec.py`) read `mask`. These are the
   figures marked `{sfx}` below. `plots_csec.py` and the `supp_*` scripts use fixed masks.
 
-## Pipeline (optional)
+## Preprocessing (optional)
 
-The Zenodo `data/` folder already contains everything the pipeline produces. Run it only if
+The Zenodo `data/` folder already contains everything the `pipe_*.py` scripts produce. Run them only if
 you change the inputs or the filter:
 
 1. `pipe_reindex.py` finds each track's CI time for the configured `CI_variable`. It samples
@@ -124,13 +124,3 @@ python scripts/plots_lingress.py scripts/config.yaml --refresh
 | `supp_cellprop.py`  | `supp_sampletime.png`, `supp_duration_{CI}.png`               | Box plots of CI time across all six CI definitions, and of echo top / rain area across the lifetime masks |
 | `supp_lingress.py`  | `supp_lingress_{CI}.png`                                      | Sensitivity of the CCN coefficient across radar-range, lifetime, CI-definition and excluded-date variants |
 | —                   | `supp_calibration.png`                                        | Radar calibration. Made in the [CSAPR2-calibration](https://github.com/conscripted-coder/CSAPR2-calibration) repo |
-
-### Shared code (not run directly)
-
-- `lib_regression.py`: `fit_bootstrap_regression`, the repeated 70/30 train/test split
-  regression that the `*lingress*` and `pies` scripts use.
-- `plots_ridge_radar.py` also exports `draw_ridge` and `fmt_median`. `plots_ridge_hid.py`
-  and `plots_hist_env.py` import them, so keep these scripts together in `scripts/`.
-
-Figures named `*_rainarea.png` in `plots/` are the same scripts run with
-`CI_variable: rainarea`.

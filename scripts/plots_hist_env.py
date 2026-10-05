@@ -14,7 +14,7 @@ import yaml
 import xarray as xr
 from plots_ridge_radar import fmt_median
 
-mpl.rcParams['font.family'] = 'Arial'
+import lib_style
 
 # Overrides below are keyed by panel letter
 NBINS          = 15
