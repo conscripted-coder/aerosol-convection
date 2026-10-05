@@ -38,7 +38,7 @@ def hist_thetae_diff(plots_dir, thetae_diff):
     fig, ax = plt.subplots(figsize=(4, 3))
     sns.histplot(thetae_diff, color='skyblue', bins=THETAE_BINS, ax=ax)
     ax.axvline(THRESH, color='red')
-    ax.set_xlabel(r'$\theta_e^{\mathrm{MU}} - \theta_e^{\mathrm{SFC}}$ (°C)')
+    ax.set_xlabel(r'$\theta_e^{\mathrm{MU}} - \theta_e^{\mathrm{SFC}}$ (°K)')
     ax.set_ylabel('Count')
     ax.set_xticks(THETAE_BINS)
     for spine in ax.spines.values():

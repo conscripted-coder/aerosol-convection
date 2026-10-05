@@ -25,6 +25,8 @@ plots_dir        = config['plots_dir']
 time_str   = '20181102.2245'
 xkm1, ykm1 = -5, -68
 xkm2, ykm2 = 50, -68
+# Section x-axis: 'along' (distance along section), 'zonal' or 'meridional' (distance from radar)
+xaxis = 'zonal'
 
 # Radar file nearest the case time; seconds vary, so match on the full timestamp
 radar_files = sorted(glob.glob(gridded_dir + '/taranis_corcsapr2cfrppiqcM1.c1.*_gridded.nc'))
@@ -48,10 +50,27 @@ dist   = np.linspace(0, length, int(length / dx) + 1)
 ix     = xr.DataArray(np.abs(x_1d[:, None] - (xkm1 + dist / length * (xkm2 - xkm1))).argmin(0), dims='dist')
 iy     = xr.DataArray(np.abs(y_1d[:, None] - (ykm1 + dist / length * (ykm2 - ykm1))).argmin(0), dims='dist')
 
+# Plotted x coordinate; zonal/meridional need a line along that axis
+if xaxis == 'along':
+    xcoord, xlabel = dist, 'Distance Along Section (km)'
+elif xaxis == 'zonal':
+    if ykm1 != ykm2:
+        sys.exit(f"xaxis='zonal' needs a zonal section (ykm1 == ykm2), got {ykm1}, {ykm2}")
+    xcoord, xlabel = xkm1 + dist / length * (xkm2 - xkm1), 'Zonal Distance from Radar (km)'
+elif xaxis == 'meridional':
+    if xkm1 != xkm2:
+        sys.exit(f"xaxis='meridional' needs a meridional section (xkm1 == xkm2), got {xkm1}, {xkm2}")
+    xcoord, xlabel = ykm1 + dist / length * (ykm2 - ykm1), 'Meridional Distance from Radar (km)'
+else:
+    sys.exit(f"xaxis must be 'along', 'zonal' or 'meridional', got {xaxis!r}")
+# Increasing axis, so west/south is on the left; ticks on multiples of 10 km
+xlim   = (xcoord.min(), xcoord.max())
+xticks = np.arange(np.ceil(xlim[0] / 10) * 10, xlim[1] + 1, 10)
+
 sec = radar.isel(time=0, x=ix, y=iy)
 # point_altitude is m MSL
 sec_alt  = sec['point_altitude']
-sec_dist = np.broadcast_to(dist, sec_alt.shape)
+sec_dist = np.broadcast_to(xcoord, sec_alt.shape)
 
 dz   = float(sec['z'][1] - sec['z'][0])
 ylim = (float(sec['origin_altitude']), 16000)
@@ -61,17 +80,18 @@ ylim = (float(sec['origin_altitude']), 16000)
 # column suffices; z is above the radar, so add origin_altitude for m MSL
 temp     = radar['sounding_temperature_post_grid'].isel(time=0, x=0, y=0).values
 melt_msl = float(radar['z'][np.argmax(temp < 0)]) + float(radar['origin_altitude'][0])
+print(f'Freezing level: {melt_msl:.0f} m MSL')
 
 # Radar and celltracks grids are co-registered, so ix/iy index both
 tracks = xr.open_dataset(tracks_file).isel(time=0)
 
-# Along-section edges of each convective core
+# Section-axis edges of each convective core
 line       = tracks['tracknumber'].where(tracks['conv_core'] != 0).isel(lon=ix, lat=iy).values
 cell_edges = []
 for tn in np.unique(line[line > 0]):
     idxs = np.flatnonzero(line == tn)
     for run in np.split(idxs, np.flatnonzero(np.diff(idxs) > 1) + 1):
-        cell_edges += [dist[run[0]], dist[run[-1]]]
+        cell_edges += [xcoord[run[0]], xcoord[run[-1]]]
 
 # hid_classes = [
 #     ("#1f77b4", 'Drizzle'),
@@ -127,8 +147,8 @@ for ax, panel_label in zip(axs, ['(a)', '(b)', '(c)']):
     for spine in ax.spines.values():
         spine.set_linewidth(1)
     ax.set_yticks(np.arange(0, 16000, 5000), np.arange(0, 16, 5))
-    ax.set_xticks(np.arange(0, length + 1, 10))
-    ax.set_xlim(0, length)
+    ax.set_xticks(xticks)
+    ax.set_xlim(xlim)
     ax.set_ylim(ylim)
     ax.text(0.02, 0.95, panel_label, transform=ax.transAxes,
             ha='left', va='top', fontsize=9, fontweight='bold', zorder=20)
@@ -177,12 +197,17 @@ for ax in axs:
                                         shrinkA=0, shrinkB=0),
                         zorder=20)
 
-# Extra tick on panel (c) marking the radar altitude at the bottom of the axis
-axs[2].set_yticks([ylim[0], 5000, 10000, 15000], [f'{ylim[0]:.0f} m\nASL', 5, 10, 15])
-axs[2].get_yticklabels()[0].set_fontsize(7)
+# Precipitation level (m MSL)
+precip_msl = 3141
 
-axs[1].set_ylabel('Height Above MSL (km)')
-axs[2].set_xlabel('Distance Along Section (km)')
+# Extra ticks on panel (c) marking the radar altitude at the bottom of the axis and the precipitation level
+axs[2].set_yticks([ylim[0], precip_msl, 5000, 10000, 15000],
+                  [f'{ylim[0]:.0f} m', f'{precip_msl} m', 5, 10, 15])
+for t in axs[2].get_yticklabels()[:2]:
+    t.set_fontsize(7)
+
+axs[1].set_ylabel('Height Above Sea Level (km)')
+axs[2].set_xlabel(xlabel)
 
 plt.savefig(plots_dir + '/csec_xz.png', dpi=300, bbox_inches="tight")
 
@@ -208,6 +233,8 @@ untracked_cores = cores.where(~cores.isin(good_tns))
 # Section line endpoints in lon/lat, at the grid columns nearest each end
 sec_lon = [float(trk_lon[iy[0], ix[0]]), float(trk_lon[iy[-1], ix[-1]])]
 sec_lat = [float(trk_lat[iy[0], ix[0]]), float(trk_lat[iy[-1], ix[-1]])]
+print(f'Section start: y = {ykm1} km -> lat {sec_lat[0]:.3f}, lon {sec_lon[0]:.3f}')
+print(f'Section end:   y = {ykm2} km -> lat {sec_lat[1]:.3f}, lon {sec_lon[1]:.3f}')
 
 fig, ax = plt.subplots(1, 1, figsize=(5, 5), subplot_kw={'projection': proj})
 
