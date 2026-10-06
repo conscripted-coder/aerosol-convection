@@ -172,7 +172,7 @@ for var_name in ds_filter.data_vars:
     ds_filter.attrs[var_name + '_hash'] = hashlib.sha256(ii_var.tobytes()).hexdigest()[:12]
 
 ds_filter.attrs['CI_variable']        = CI_variable
-ds_filter.attrs['coupled_filter']     = f'abs(thetav_mu - thetav_sfc) < {thresh} K'
+ds_filter.attrs['coupled_filter']     = f'thetae_mu - thetae_sfc < {thresh} K or initial_ht_parcel_mu <= 500 m'
 ds_filter.attrs['eastofridge_filter'] = 'cell_meanlon > -64.9'
 ds_filter.attrs['notsplit_filter']    = 'start_split_tracknumber is NaN'
 ds_filter.attrs['notmerge_filter']    = 'end_merge_timeindex > 4 or end_merge_tracknumber is NaN'
