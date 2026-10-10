@@ -4,7 +4,10 @@ Responses run down in bands, predictors across. Each cell stacks RED (upper, one
 model) over BLUE (lower, partial coefficient from the full model); both use
 fit_bootstrap_regression with identical options, hence identical splits. Bar length = median
 over splits; deep colour = 2.5-97.5 split range excludes zero. The right-edge R^2 is the
-multivariate test R^2. Fits are cached per CI variable and mask.
+multivariate test R^2. Fits are cached per CI variable, mask, and mode.
+
+Set lingress_figure: supp in the config for the supplement figure (every HID category, tighter
+bars), suffixed _supp; main is the manuscript figure.
 """
 
 
@@ -33,20 +36,87 @@ mask     = config['mask']
 mask_var = 'good_indices' if mask == 'default' else 'good_indices_' + mask
 mask_sfx = '' if mask == 'default' else '_' + mask
 
+# Main (manuscript) or supplement figure; the supplement adds every HID category
+mode     = config['lingress_figure']
+mode_sfx = '' if mode == 'main' else '_supp'
+
+# Per-mode response list and vertical spacing. bar_height is one bar's thickness in y data
+# units; gaps are edge-to-edge in BAR_HEIGHTs (response pair <-> next, band <-> next band).
+MODES = {
+    'main': {
+        'bar_height': 0.7,
+        'gap_resp':   0.70,
+        'gap_band':   1.90,
+        'single_groups': [
+            [   # bulk rain amount vs. footprint
+                ('Volumetric Rain',             'volrain'),
+                ('Precipitation Area',          'rain_area_sampled'),
+            ],
+            [   # cell scale
+                ('10 dBZ ETH',                  'max_echotop_10dbz'),
+                (r'Cloud Top T$_{\mathrm{B}}$', 'cloud_top_temperature_min'),
+            ],
+            [   # rimed ice composite
+                ('**Rimed Ice**',           'rime_frz'),
+            ],
+            [   # melting rimed ice composite
+                ('**Melting Rimed Ice**',   'rime_liq'),
+            ],
+        ],
+    },
+    'supp': {
+        'bar_height': 0.6,
+        'gap_resp':   0.50,
+        'gap_band':   1.50,
+        'single_groups': [
+            [   # bulk rain amount vs. footprint
+                ('Volumetric Rain',             'volrain'),
+                ('Precipitation Area',          'rain_area_sampled'),
+            ],
+            [   # cell scale
+                ('10 dBZ ETH',                  'max_echotop_10dbz'),
+                (r'Cloud Top T$_{\mathrm{B}}$', 'cloud_top_temperature_min'),
+            ],
+            [   # liquid HID categories
+                ('Drizzle',             'drizzle'),
+                ('Rain',                'rain'),
+                ('Wet Snow',            'wet_snow'),
+            ],
+            [   # rimed ice: composite of the three categories above it
+                ('Graupel-low',         'low_density_graupel'),
+                ('Graupel-high',        'high_density_graupel_frz'),
+                ('Hail',                'hail_frz'),
+                ('**Rimed Ice**',           'rime_frz'),
+            ],
+            [   # melting rimed ice: composite of the three categories above it
+                ('Big Drops',           'big_drops'),
+                ('Graupel-high',        'high_density_graupel_liq'),
+                ('Hail',                'hail_liq'),
+                ('**Melting Rimed Ice**',   'rime_liq'),
+            ],
+            [   # unrimed ice: composite of the three categories above it
+                ('Aggregates',          'aggregates'),
+                ('Ice Crystals',        'ice_crystals'),
+                ('Vertical Ice',        'vertical_ice'),
+                ('**Non-Rimed Ice**',       'snow'),
+            ],
+        ],
+    },
+}
+
 # Coefficient scale shared by both bar types. Not clipped on purpose: overflow into the
 # next column is the cue to raise BAR_SCALE.
 BAR_SCALE     = 0.7
-BAR_HEIGHT    = 0.7  # thickness of one bar, y data units
+BAR_HEIGHT    = MODES[mode]['bar_height']
 COL_HALFWIDTH = 0.5  # half-width available to a bar within its column
 
-# Edge-to-edge gaps, in BAR_HEIGHTs. A pair must read as one object, so keep the
-# within-pair gap well below the others.
+# A pair must read as one object, so keep the within-pair gap well below the others
 GAP_WITHIN_PAIR       = 0     # univariate bar <-> its multivariate bar
-GAP_BETWEEN_RESPONSES = 0.70  # one response's pair <-> the next
-GAP_BETWEEN_BANDS     = 1.90  # last pair of a band <-> first pair of the next
+GAP_BETWEEN_RESPONSES = MODES[mode]['gap_resp']
+GAP_BETWEEN_BANDS     = MODES[mode]['gap_band']
 
 # Height = total_extent * FIG_INCHES_PER_Y, so bar thickness is fixed however many rows
-FIG_WIDTH        = 6
+FIG_WIDTH        = 6.5
 FIG_INCHES_PER_Y = 0.117
 
 HEADER_GAP = 1.5  # top of first bar to column headers, y data units
@@ -97,40 +167,7 @@ percentile_groups = [
 ]
 
 # Non-percentile responses; each inner list is one band, each row labelled individually
-single_groups = [
-    [   # bulk rain amount vs. footprint
-        ('Volumetric Rain',             'volrain'),
-        ('Precipitation Area',          'rain_area_sampled'),
-    ],
-    [   # cell scale
-        ('10 dBZ ETH',                  'max_echotop_10dbz'),
-        (r'Cloud Top T$_{\mathrm{B}}$', 'cloud_top_temperature_min'),
-    ],
-    # [   # liquid HID categories
-    #     ('Drizzle',             'drizzle'),
-    #     ('Rain',                'rain'),
-    #     ('Wet Snow',            'wet_snow'),
-    # ],
-    [   # rimed ice: composite of the three categories commented out below
-        # ('Graupel-low',         'low_density_graupel'),
-        # ('Graupel-high',        'high_density_graupel_frz'),
-        # ('Hail',                'hail_frz'),
-        ('**Rimed Ice**',           'rime_frz'),
-    ],
-    [   # melting rimed ice: composite of the three categories commented out below
-        # ('Big Drops',           'big_drops'),
-        # ('Graupel-high',        'high_density_graupel_liq'),
-        # ('Hail',                'hail_liq'),
-        ('**Melting Rimed Ice**',   'rime_liq'),
-    ],
-    # [   # unrimed ice: composite of the three categories below
-    #     # ('Aggregates',          'aggregates'),
-    #     # ('Ice Crystals',        'ice_crystals'),
-    #     # ('Vertical Ice',        'vertical_ice'),
-    #     ('**Non-Rimed Ice**',       'snow'),
-    # ],
-]
-
+single_groups = MODES[mode]['single_groups']
 
 # Percentile bands get one centred label; single-variable bands label each row
 bands = []
@@ -156,11 +193,11 @@ col2idx = {c: i for i, c in enumerate(pred)}
 lst        = ['ccn',  'CAPE_sfc','pw_mwr', 'rh_600mb', 'shear_mag_bulk_0to9km']
 lst_labels = ['CCN', 'CAPE', 'PW', '600-hPa RH', '0-9 km BWD']
 
-# Cache of the slow fits, one file per CI variable and mask. Fit options are not checked:
-# pass --refresh after changing the responses, predictors, or lib_regression.
-CACHE_PATH = data_dir + '/cache_lingress_' + CI_variable + mask_sfx + '.nc'
+# Cache of the slow fits, one file per CI variable, mode, and mask. Fit options are not checked:
+# set refresh: true after changing the responses, predictors, or lib_regression.
+CACHE_PATH = data_dir + '/cache_lingress_' + CI_variable + mode_sfx + mask_sfx + '.nc'
 
-if '--refresh' in sys.argv or not os.path.exists(CACHE_PATH):
+if config['refresh'] or not os.path.exists(CACHE_PATH):
     df_updr = xr.open_dataset(data_dir + '/df_updr_' + CI_variable + '.nc').to_dataframe()
     good    = xr.open_dataset(data_dir + '/the_chosen_few_' + CI_variable + '.nc')[mask_var].values
     df_updr = df_updr[good]
@@ -320,6 +357,6 @@ legend_elements = [
 ax.legend(handles=legend_elements, loc='upper center',
           bbox_to_anchor=(0.7, -0.01), ncol=2, fontsize=8, frameon=False)
 
-plt.savefig(plots_dir + '/lingress_' + CI_variable + mask_sfx + '.png', dpi=300,
+plt.savefig(plots_dir + '/lingress_' + CI_variable + mode_sfx + mask_sfx + '.png', dpi=300,
             bbox_inches="tight")
 plt.close('all')

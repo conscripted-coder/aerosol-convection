@@ -1,6 +1,6 @@
 """Supplementary sensitivity figure: responses down the rows, four sampling sweeps across the
 columns, one bar per variant giving the median standardized CCN coefficient (deep = 95% split
-range excludes zero, hatched = control run). Fits are cached; pass --refresh to refit.
+range excludes zero, hatched = control run). Fits are cached; set refresh: true in the config to refit.
 """
 
 import os
@@ -46,12 +46,12 @@ GAP_WITHIN_GROUP    = 0    # between variants of the same sweep
 GAP_BETWEEN_COLUMNS = 1.5  # between sweeps
 
 # Vertical gaps, y data units (a lane spans 2 * ROW_HALFHEIGHT)
-GAP_BETWEEN_RESPONSES = 0.3  # between response lanes
+GAP_BETWEEN_RESPONSES = 0.1  # between response lanes
 GAP_BETWEEN_BANDS     = 1.0  # between bands
 
 # Width is fixed; INCH_PER_Y_UNIT trades magnitude resolution against figure height
-FIG_WIDTH       = 6.2
-INCH_PER_Y_UNIT = 0.5
+FIG_WIDTH       = 6.5
+INCH_PER_Y_UNIT = 0.4
 
 LABEL_MARGIN = 4.2  # left margin for row labels, x data units
 
@@ -185,7 +185,7 @@ for column in COLUMNS:
                         for lab, v in zip(column['labels'], column['variants'])]
 
 
-# Fit options are not checked against the cache: pass --refresh after changing the
+# Fit options are not checked against the cache: set refresh: true after changing the
 # variants, responses, predictors, or lib_regression
 CACHE_PATH = data_dir + '/cache_supp_lingress_' + CI_variable + '.nc'
 
@@ -195,7 +195,7 @@ def _key(variant):
     return '|'.join(variant)
 
 
-if '--refresh' in sys.argv or not os.path.exists(CACHE_PATH):
+if config['refresh'] or not os.path.exists(CACHE_PATH):
     # Dedup, so the control is fitted once
     variants = sorted({v for column in COLUMNS for v in column['variants']})
 

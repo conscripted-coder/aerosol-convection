@@ -29,14 +29,14 @@ as four zips. Unzip them all into the same folder and set `celltracking_dir` and
 to the two folders this creates. `data.zip` is enough for every figure except `plots_csec.py`,
 which also needs `terrain.zip` and `case.zip`.
 
-`celltracking_dir` must contain four subfolders:
+`celltracking_dir` holds up to four subfolders:
 
-| Folder          | Contents                                                        | Source |
-|-----------------|-----------------------------------------------------------------|--------|
-| `stats/`        | Track statistics and per-track environment/aerosol parameters   | [Zenodo](https://doi.org/10.5281/zenodo.23094051), made with [PyFLEXTRKR](https://github.com/FlexTRKR/PyFLEXTRKR) + [cacti-radar](https://github.com/ICLASS-SFA/cacti-radar/tree/time_series_enochjo) |
-| `celltracking/` | Per-timestep cell masks, `20181015.0000_20190303.0000/celltracks_*.nc` | [Zenodo](https://doi.org/10.5281/zenodo.23094051) (case-study timestep only), made with [PyFLEXTRKR](https://github.com/FlexTRKR/PyFLEXTRKR) |
-| `data/`         | Preprocessing outputs (see below)                               | [Zenodo](https://doi.org/10.5281/zenodo.23094051) |
-| `terrain/`      | `terrain_d01.nc`, `lat_d01.nc`, `lon_d01.nc`                    | [Zenodo](https://doi.org/10.5281/zenodo.23094051) |
+| Folder          | Contents                                                        | Zip |
+|-----------------|-----------------------------------------------------------------|-----|
+| `data/`         | Preprocessing outputs (see below)                               | `data.zip` |
+| `stats/`        | Track statistics and per-track environment/aerosol parameters, made with [PyFLEXTRKR](https://github.com/FlexTRKR/PyFLEXTRKR) + [cacti-radar](https://github.com/ICLASS-SFA/cacti-radar/tree/time_series_enochjo). Only preprocessing reads it | `stats.zip` |
+| `terrain/`      | `terrain_d01.nc`, `lat_d01.nc`, `lon_d01.nc`                    | `terrain.zip` |
+| `celltracking/` | Per-timestep cell masks, `20181015.0000_20190303.0000/celltracks_*.nc`, made with [PyFLEXTRKR](https://github.com/FlexTRKR/PyFLEXTRKR) (case-study timestep only) | `case.zip` |
 
 The preprocessing scripts read these six files from `stats/`:
 
@@ -48,16 +48,16 @@ The preprocessing scripts read these six files from `stats/`:
 - `combomet_parameters_celltrack_20181015.0000_20190303.0000.nc`
 
 `gridded_dir` holds the TARANIS gridded radar files
-(`taranis_corcsapr2cfrppiqcM1.c1.*_gridded.nc`). Only `plots_csec.py` needs it. Zenodo has
-the case-study file. The full set is on NERSC (m1657 members) in `/global/cfs/cdirs/m1657/enochjo/taranis/taranis_corcsapr2cfrppiqcM1_gridded.c1/`.
+(`taranis_corcsapr2cfrppiqcM1.c1.*_gridded.nc`). Only `plots_csec.py` needs it. `case.zip`
+has the case-study file. The full set is on NERSC (m1657 members) in `/global/cfs/cdirs/m1657/enochjo/taranis/taranis_corcsapr2cfrppiqcM1_gridded.c1/`.
 
 ## Config options
 
-The config has two analysis switches besides the paths:
+Besides the paths, the config has four settings:
 
 - **`CI_variable`** sets the CI definition: the metric whose first peak within 2 h of track
   initiation sets the time each cell is sampled. The choices are `eth_10dbz` (main), `Tb_min`,
-  `zh_max`, `rr_max`, `volrain` and `rainarea`. Most figure names end in it, e.g.
+  `zh_max`, `rr_max`, `volrain` and `rainarea`. Most figure names include it, e.g.
   `corr_full_eth_10dbz.png`.
 - **`mask`** sets which cell filter from `the_chosen_few_{CI_variable}.nc` is applied. The
   default is `default` (details in `scripts/pipe_filter.py`). The other masks are
@@ -67,8 +67,11 @@ The config has two analysis switches besides the paths:
   - drop the Nth most prolific start date: `date1`–`date4`
 
   A non-default mask adds `_{mask}` to the figure name, so the manuscript figures are never
-  overwritten. Only the `plots_*` scripts (except `plots_csec.py`) read `mask`. These are the
-  figures marked `{sfx}` below. `plots_csec.py` and the `supp_*` scripts use fixed masks.
+  overwritten. Only the figures marked `{sfx}` below follow `mask`. `plots_csec.py` and the
+  `supp_*` scripts use fixed masks.
+- **`lingress_figure`** picks the `plots_lingress.py` figure: `main` or `supp` (every HID
+  category).
+- **`refresh`** refits the cached regressions (see [Making figures](#making-figures)).
 
 ## Preprocessing (optional)
 
@@ -90,20 +93,16 @@ once. So if you regenerate, run both steps once for each of the six `CI_variable
 ## Making figures
 
 Each figure script reads `df_updr_*.nc` and `the_chosen_few_*.nc` and writes PNGs to
-`plots_dir`. The exception is `plots_csec.py`, which reads only `the_chosen_few_eth_10dbz.nc`
-and always uses its default sample.
+`plots_dir`. The exception is `plots_csec.py`, which reads only the default mask of
+`the_chosen_few_eth_10dbz.nc`, plus the radar, cell-mask and terrain files.
 
 Three scripts fit regressions over 5000 repeated 70/30 train/test splits (`lib_regression.py`)
 and cache the fits in `data/cache_*.nc`: `plots_lingress.py`, `plots_pies.py` and
-`supp_lingress.py`. The caches are not on Zenodo, so the first run of each script fits the
-regressions. After that, the cache is reused. Each `CI_variable`/`mask` setting a script reads
-gets its own cache, but the contents are not checked against the current settings, so pass
-`--refresh` after re-running preprocessing or changing predictors, responses, panels or
-`lib_regression.py`:
-
-```bash
-python scripts/plots_lingress.py scripts/config.local.yaml --refresh
-```
+`supp_lingress.py`. The caches are not on Zenodo, so each script fits on its first run and
+reuses the cache after that. Each combination of the settings a script reads (`CI_variable`,
+`mask`, `lingress_figure`) gets its own cache. A cache is not refit when its inputs or the
+fitting code change, so set `refresh: true` after re-running preprocessing or changing
+predictors, responses, panels or `lib_regression.py`, then set it back to `false`.
 
 ## Scripts and figures
 
@@ -130,6 +129,7 @@ scripts.
 | Script              | Figure(s)                                                     | What it shows |
 |---------------------|---------------------------------------------------------------|---------------|
 | `plots_corr_full.py`| `corr_full_{CI}{sfx}.png`                                     | Spearman correlogram of all variables |
+| `plots_lingress.py` | `lingress_{CI}_supp{sfx}.png` (`lingress_figure: supp`)      | The main `lingress` figure with every HID category |
 | `supp_misc.py`      | `supp_thetae_diff.png`, `supp_dates_{CI}.png`, `supp_radardist_{CI}.png` | Checks on the filter choices: θ<sub>e</sub><sup>MU</sup> − θ<sub>e</sub><sup>SFC</sup> (surface coupling), cells per start date, cells vs radar range (`110km` mask) |
 | `supp_cellprop.py`  | `supp_sampletime.png`, `supp_duration_{CI}.png`               | Box plots of CI time across all six CI definitions, and of echo top / rain area across the lifetime masks |
 | `supp_lingress.py`  | `supp_lingress_{CI}.png` (paper: `eth_10dbz`, `rainarea`)     | Sensitivity of the CCN coefficient across radar-range, lifetime, CI-definition and excluded-date variants |

@@ -20,3 +20,11 @@ CI_variable: eth_10dbz
 #           2ts, 3ts, 5ts, 6ts               (minimum cell lifetime)
 #           date1, date2, date3, date4       (drop the Nth most prolific start date)
 mask: default
+
+# Refit and overwrite the regression caches of plots_lingress, plots_pies and supp_lingress.
+# The caches are not checked against the current settings, so set true after re-running
+# preprocessing or changing predictors, responses, panels or lib_regression.py.
+refresh: false
+
+# plots_lingress.py figure: "main" (manuscript) or "supp" (every HID category, suffixed _supp)
+lingress_figure: main

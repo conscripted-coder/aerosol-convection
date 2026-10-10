@@ -86,7 +86,7 @@ RESPONSES = [
     ('Volumetric Rain',                 'rainarea',  'volrain'),
 ]
 
-# One cache per mask. Fit options are not checked: pass --refresh after changing the panels,
+# One cache per mask. Fit options are not checked: set refresh: true after changing the panels,
 # predictors, or lib_regression.
 CACHE_PATH = data_dir + '/cache_pies' + mask_sfx + '.nc'
 
@@ -115,7 +115,7 @@ def fit_panels(ci_var, cols):
     )
 
 
-if '--refresh' in sys.argv or not os.path.exists(CACHE_PATH):
+if config['refresh'] or not os.path.exists(CACHE_PATH):
     # One fit per CI definition
     by_ci = {}
     for _, ci_var, col in RESPONSES:
