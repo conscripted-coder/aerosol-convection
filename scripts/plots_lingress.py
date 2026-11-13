@@ -116,7 +116,7 @@ GAP_BETWEEN_RESPONSES = MODES[mode]['gap_resp']
 GAP_BETWEEN_BANDS     = MODES[mode]['gap_band']
 
 # Height = total_extent * FIG_INCHES_PER_Y, so bar thickness is fixed however many rows
-FIG_WIDTH        = 6.5
+FIG_WIDTH        = 5.5
 FIG_INCHES_PER_Y = 0.117
 
 HEADER_GAP = 1.5  # top of first bar to column headers, y data units

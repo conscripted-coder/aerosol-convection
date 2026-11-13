@@ -75,10 +75,12 @@ COLOR_PREDICTOR = {
 
 # Panels, row by row: (title, CI definition, response column). eth_10dbz is the primary CI
 # definition, rainarea a supplementary one; each response uses whichever samples it better.
+# None leaves that slot blank.
 RESPONSES = [
     (r'Z$_{\mathrm{DR,97.5th}}$',       'eth_10dbz', 'zdr_liq_p98'),
     (r'D$_{\mathrm{m,97.5th}}$',        'eth_10dbz', 'Dm_p98'),
-    (r'Z$_{\mathrm{H,liq,97.5th}}$',    'eth_10dbz', 'zh_liq_p98'),
+    # (r'Z$_{\mathrm{H,liq,97.5th}}$',    'eth_10dbz', 'zh_liq_p98'),
+    None,
     (r'Z$_{\mathrm{H,ice,97.5th}}$',    'rainarea',  'zh_frz_p98'),
     ('Rimed Ice',                       'rainarea',  'rime_frz'),
     # ('10-dBZ ETH',                      'rainarea',  'max_echotop_10dbz'),
@@ -118,7 +120,7 @@ def fit_panels(ci_var, cols):
 if config['refresh'] or not os.path.exists(CACHE_PATH):
     # One fit per CI definition
     by_ci = {}
-    for _, ci_var, col in RESPONSES:
+    for _, ci_var, col in filter(None, RESPONSES):
         by_ci.setdefault(ci_var, []).append(col)
 
     coef_multi = xr.concat([fit_panels(ci_var, cols) for ci_var, cols in by_ci.items()],
@@ -141,7 +143,16 @@ i_lo, i_hi = 0, len(pct) - 1
 fig, axes = plt.subplots(N_ROWS, N_COLS, figsize=FIG_SIZE)
 axes      = axes.ravel()
 
-for i_panel, (ax, (title, ci_var, col)) in enumerate(zip(axes, RESPONSES)):
+i_letter = 0
+for ax, resp in zip(axes, RESPONSES):
+    if resp is None:
+        # Invisible full pie: same axes limits as the drawn panels, and still counts
+        # toward the row extent so the label and legend stay put
+        wedges, _ = ax.pie([1], startangle=START_ANGLE, counterclock=False)
+        for w in wedges:
+            w.set_visible(False)
+        continue
+    title, ci_var, col = resp
     panel = coef_multi.sel(panel=panel_key(ci_var, col), predictor=lst).values
     med         = panel[i_med, :]
     lo, hi      = panel[i_lo, :], panel[i_hi, :]
@@ -185,8 +196,9 @@ for i_panel, (ax, (title, ci_var, col)) in enumerate(zip(axes, RESPONSES)):
 
     ax.set_title(title, fontsize=10, pad=TITLE_PAD)
     # Panel letter as the left title, so it shares the title's baseline
-    ax.set_title(f'({chr(ord("a") + i_panel)})', loc='left',
+    ax.set_title(f'({chr(ord("a") + i_letter)})', loc='left',
                  fontsize=PANEL_LABEL_SIZE, pad=TITLE_PAD)
+    i_letter += 1
 
 # Separate colour (predictor) and pattern (coefficient) legends, so hatched swatches don't
 # read as extra predictors
@@ -202,6 +214,18 @@ handles_pattern = [
 ]
 
 fig.subplots_adjust(wspace=WSPACE, hspace=HSPACE)
+
+# Centre a row's drawn panels under the full row by shifting them right by half a column per
+# blank slot (blank slots are assumed to sit at the row's end)
+col_step = axes[1].get_position().x0 - axes[0].get_position().x0
+for i_row in range(N_ROWS):
+    row      = RESPONSES[i_row * N_COLS:(i_row + 1) * N_COLS]
+    n_blank  = N_COLS - sum(r is not None for r in row)
+    for j, r in enumerate(row):
+        if r is not None and n_blank:
+            ax  = axes[i_row * N_COLS + j]
+            pos = ax.get_position()
+            ax.set_position([pos.x0 + n_blank * col_step / 2, pos.y0, pos.width, pos.height])
 
 # Label each row with its CI definition (taken from its first panel), with a legend below:
 # colours by the top row, patterns by the bottom. Row extents come from the wedges and
@@ -244,4 +268,4 @@ plt.close('all')
 print(f"Wrote {plots_dir}/lingress_pies{mask_sfx}.png")
 
 print('\nCaption line (panels are drawn from two different CI definitions):')
-print('  ' + '; '.join(f'{col} ({ci_var})' for _, ci_var, col in RESPONSES))
+print('  ' + '; '.join(f'{col} ({ci_var})' for _, ci_var, col in filter(None, RESPONSES)))

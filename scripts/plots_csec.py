@@ -56,7 +56,7 @@ if xaxis == 'along':
 elif xaxis == 'zonal':
     if ykm1 != ykm2:
         sys.exit(f"xaxis='zonal' needs a zonal section (ykm1 == ykm2), got {ykm1}, {ykm2}")
-    xcoord, xlabel = xkm1 + dist / length * (xkm2 - xkm1), 'Zonal Distance from Radar (km)'
+    xcoord, xlabel = xkm1 + dist / length * (xkm2 - xkm1), 'Zonal Distance (km)'
 elif xaxis == 'meridional':
     if xkm1 != xkm2:
         sys.exit(f"xaxis='meridional' needs a meridional section (xkm1 == xkm2), got {xkm1}, {xkm2}")
