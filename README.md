@@ -24,7 +24,7 @@ on machines without a system Arial (e.g. NERSC).
 
 ## Input data
 
-The data are on Zenodo ([doi:10.5281/zenodo.23094051](https://doi.org/10.5281/zenodo.23094051))
+The data are on Zenodo ([doi:10.5281/zenodo.24261154](https://doi.org/10.5281/zenodo.24261154))
 as four zips. Unzip them all into the same folder and set `celltracking_dir` and `gridded_dir`
 to the two folders this creates. `data.zip` is enough for every figure except `plots_csec.py`,
 which also needs `terrain.zip` and `case.zip`.
